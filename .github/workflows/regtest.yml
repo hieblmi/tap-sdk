@@ -14,12 +14,13 @@ defaults:
 env:
   GOPATH: /home/runner/work/go
   GO_VERSION: '1.26.0'
+  TAPD_REF: 'cbdeb06db005c3dbc5463f2e277dde2ef6b83c34'
 
 jobs:
   regtest:
     name: Regtest integration tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: git checkout
@@ -30,11 +31,11 @@ jobs:
         with:
           go-version: '${{ env.GO_VERSION }}'
 
-      - name: Start regtest stack (pinned image)
-        run: make itest-up
+      - name: Build and start regtest stack (pinned tapd source)
+        run: make itest-up-main
 
       - name: Run integration tests
-        run: make itest-run
+        run: make itest-run-main
 
       - name: Collect container logs on failure
         if: failure()
@@ -55,4 +56,4 @@ jobs:
 
       - name: Tear down regtest stack
         if: always()
-        run: make itest-down
+        run: make itest-down-main

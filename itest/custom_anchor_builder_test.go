@@ -204,6 +204,13 @@ func TestCustomAnchorBuilderEndToEnd(t *testing.T) {
 		h.WaitForSync(t, ctx, h.AliceClient, defaultSyncTimeout)
 		h.WaitForSync(t, ctx, h.BobClient, defaultSyncTimeout)
 
+		// Confirmation spends the original inventory. A retry must still
+		// return the stored transfer without revalidating spent inputs.
+		_, err = h.AliceWallet.PublishCustomAnchorTransfer(
+			ctx, sealed, finalAnchorPsbt,
+		)
+		require.NoError(t, err)
+
 		output := sealed.Outputs[0]
 		completedProof := h.WaitForProofFile(
 			t, ctx, h.AliceWallet,
@@ -387,10 +394,9 @@ func TestCustomAnchorBuilderExternalP2AEndToEnd(t *testing.T) {
 			finalPacket.Inputs[0].WitnessUtxo.Value,
 			"ephemeral P2A parent must pay zero fee")
 
-		logged, err := h.AliceWallet.PublishCustomAnchorTransfer(
-			ctx, sealed, finalAnchorPsbt,
+		logged := exercisePublicationRecovery(
+			t, ctx, h, sealed, finalAnchorPsbt,
 		)
-		require.NoError(t, err)
 		require.NotEmpty(t, logged.AnchorTransaction)
 		require.NotEmpty(t, logged.VirtualTransactions)
 

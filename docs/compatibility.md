@@ -17,19 +17,21 @@ root-locator proofs. When upgrading from v0.2.x, remove uses of the
 `CommitVirtualPsbtsRequest.TransitionProofVersion` selector. Previously
 confirmed proof histories remain usable.
 
-The Go dependencies follow the btcd-v2 development line, while the integration
-suite runs the released daemon images. Regtest sets `proofactivationheight=1`
+The Go dependencies follow the btcd-v2 development line. Regtest sets `proofactivationheight=1`
 on both nodes to enforce the v0.8.5 proof rules throughout the suite.
 
 ## Release validation
 
-Run the full integration suite against the pinned daemon images:
+Run released-daemon checks against the pinned daemon images:
 
 ```bash
 make itest
 ```
 
-For development against tapd main:
+Publication recovery tests require a tapd build containing
+[taproot-assets#2348](https://github.com/lightninglabs/taproot-assets/pull/2348).
+CI pins this source revision through `TAPD_REF`; v0.8.5 does not include the
+fix. Run these tests against tapd main (or a `TAPD_REF` override):
 
 ```bash
 make itest-main

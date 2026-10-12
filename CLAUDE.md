@@ -24,7 +24,7 @@ See DEVELOPMENT_CYCLE.md.
 | `make unit pkg=<package>` | Run tests for specific package |
 | `make unit pkg=<package> case=<test>` | Run specific test case |
 | `make itest-main` | Run integration tests against tapd built from `taproot-assets` main (**use this locally**) |
-| `make itest` | Run integration tests against the pinned tapd image (what CI uses) |
+| `make itest` | Run integration tests against the pinned tapd image (released-daemon checks) |
 | `make itest-run-main case=<test>` | Run a single itest against tapd-main without re-spinning the stack |
 
 ## Integration tests
@@ -33,9 +33,9 @@ When developing locally, **always use `itest-main`** (or `itest-run-main` if
 the stack is already up). It builds tapd from the latest `taproot-assets`
 main so new RPCs and proto changes are exercised before CI catches them.
 
-CI pins to the latest released tapd image via plain `itest` because
-bleeding-edge tapd does not always have a pre-built image yet. Use plain
-`itest` only when you need to reproduce what CI sees.
+CI pins `TAPD_REF` in the regtest workflow while testing unreleased publication
+recovery. Plain `itest` targets the released image and does not yet support the
+publication replay tests.
 
 ## Architecture
 

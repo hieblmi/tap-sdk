@@ -606,19 +606,18 @@ original request context, which can already be canceled when cleanup runs.
 Either failure can leave leases until expiry and must not be described as
 recoverable by the SDK alone.
 
-tapd's `PublishAndLogTransfer` has no request ID or documented idempotency
-contract. A timeout after submission is therefore an ambiguous result. The
-integration must not blindly retry. It should first inspect the Bitcoin
-mempool/chain and tapd transfer history, reconcile by transaction ID, and only
-then decide whether to resubmit or continue proof recovery. Adding a
-duplicate-safe request ID and status lookup is recommended upstream work.
+`PublishAndLogTransfer` in a tapd build containing
+[taproot-assets#2348](https://github.com/lightninglabs/taproot-assets/pull/2348)
+returns the recorded transfer when the same anchor is submitted again. The
+SDK uses the existing RPC without an opt-in flag. Older daemons, including
+v0.8.5, do not provide this recovery guarantee.
 
-Publish/log failures use `CustomAnchorPublishAttemptError`. A nil response, a
-response without an anchor transaction, a response whose anchor or virtual
-packets differ from the finalized sealed package, a transport error that may
-have reached the backend, and `AlreadyExists` all set `OutcomeUnknown` because
-none proves that a prior operation used identical content. These cases require
-the same transaction-ID reconciliation before retry.
+Publish/log failures use `CustomAnchorPublishAttemptError`. An unknown outcome
+means the backend may have recorded the transfer. Persist the sealed package
+and final PSBT before submission, then reconcile transfer history by anchor
+transaction ID. With the patched daemon, an absent transfer can be retried
+using the same saved package and PSBT. Replaying a recorded anchor returns its
+original transfer; it does not amend metadata or change the broadcast mode.
 
 ## API Examples
 
@@ -746,8 +745,9 @@ following improvements should be tracked separately:
    more than one packet, while grouped multi-issuance selection can naturally
    require one packet per concrete issuance. This blocks wallet-selected group
    inputs, not the proof-selected MVP.
-2. **Idempotent publish/log.** Add a request ID and a transaction-status lookup
-   or documented duplicate-safe semantics to `PublishAndLogTransfer`.
+2. **Publication recovery.** Tracked in
+   [taproot-assets#2348](https://github.com/lightninglabs/taproot-assets/pull/2348),
+   using the existing anchor transaction ID and transfer log.
 3. **Commit lease recovery.** Fix lnd's partial funding rollback to release
    each output with its actual custom lock ID, and make tapd cleanup use an
    independent bounded context. Then make `CommitVirtualPsbts` idempotent and

@@ -1,6 +1,4 @@
-# Local-only override that rebuilds tapd from taproot-assets `main` each
-# time the stack is brought up. Use it when you need to validate SDK changes
-# against unreleased tapd behavior before the next tapd release image.
+# Build tapd from TAPD_REF (main by default) to test unreleased behavior.
 #
 # Usage:
 #   docker compose \
@@ -10,20 +8,19 @@
 #
 #   go test -tags=itest -timeout=20m ./itest/...
 #
-# CI does not use this file — it keeps the pinned image so the workflow
-# stays reproducible until the next tapd release.
+# CI pins TAPD_REF to the commit providing publication recovery.
 
 services:
   tapd-alice:
     image: tap-sdk/tapd:local
     build:
-      context: https://github.com/lightninglabs/taproot-assets.git#main
+      context: https://github.com/lightninglabs/taproot-assets.git#${TAPD_REF:-main}
       args:
-        checkout: main
+        checkout: ${TAPD_REF:-main}
 
   tapd-bob:
     image: tap-sdk/tapd:local
     build:
-      context: https://github.com/lightninglabs/taproot-assets.git#main
+      context: https://github.com/lightninglabs/taproot-assets.git#${TAPD_REF:-main}
       args:
-        checkout: main
+        checkout: ${TAPD_REF:-main}
